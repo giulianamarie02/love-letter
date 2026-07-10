@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Für dich 🖤</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Dancing+Script:wght@600&display=swap');
+
+  :root{
+    --black:#120810;
+    --noir:#1d0f1a;
+    --pink-neon:#ff2f7e;
+    --pink-deep:#a3134f;
+    --pink-soft:#ffc9e2;
+    --paper:#fdf1f6;
+    --ink:#3a0e24;
+    --gold:#d8a86b;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{
+    margin:0; padding:0; min-height:100%;
+    font-family:'EB Garamond', serif;
+    background:
+      radial-gradient(circle at 50% 15%, #3a0f28 0%, transparent 55%),
+      linear-gradient(180deg, var(--black) 0%, var(--noir) 55%, #2b0f22 100%);
+    overflow-x:hidden;
+  }
+  #app{
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:32px 20px;
+    position:relative;
+  }
+
+  /* floating hearts */
+  .bg-heart{
+    position:fixed;
+    bottom:-40px;
+    font-size:20px;
+    opacity:0.5;
+    animation:floatUp linear infinite;
+    pointer-events:none;
+    z-index:0;
+  }
+  @keyframes floatUp{
+    0%{transform:translateY(0) translateX(0) rotate(0deg); opacity:0;}
+    12%{opacity:0.55;}
+    100%{transform:translateY(-115vh) translateX(18px) rotate(20deg); opacity:0;}
+  }
+
+  h1.title{
+    font-family:'Cinzel Decorative', serif;
+    color:var(--pink-soft);
+    font-size:1.05rem;
+    text-align:center;
+    letter-spacing:1px;
+    margin:0 0 34px;
+    z-index:1;
+    text-shadow:0 0 14px rgba(255,47,126,0.45);
+  }
+
+  #scene{
+    position:relative;
+    width:min(300px, 82vw);
+    min-height:220px;
+    z-index:1;
+  }
+
+  /* ---------- ENVELOPE ---------- */
+  #envelope-wrap{
+    position:relative;
+    width:100%;
+    cursor:pointer;
+    user-select:none;
+    -webkit-user-select:none;
+    transition:opacity .5s ease, filter .5s ease;
+  }
+  #envelope-wrap:active .envelope-body{ transform:scale(0.97); }
+  .envelope{ position:relative; width:100%; aspect-ratio:3/2; }
+  .envelope-body{
+    position:absolute; inset:0;
+    background:linear-gradient(160deg, #2a1420, var(--black));
+    border-radius:8px;
+    box-shadow:0 20px 40px -14px rgba(0,0,0,0.7), inset 0 0 0 1px rgba(255,120,170,0.25);
+    transition:transform .15s ease;
+    overflow:hidden;
+  }
+  .envelope-body::after{
+    content:"";
+    position:absolute; inset:0;
+    background:
+      linear-gradient(135deg, transparent 49.2%, rgba(255,47,126,0.18) 49.2%, rgba(255,47,126,0.18) 50.8%, transparent 50.8%),
+      linear-gradient(45deg, transparent 49.2%, rgba(255,47,126,0.18) 49.2%, rgba(255,47,126,0.18) 50.8%, transparent 50.8%);
+  }
+  .letter-peek{
+    position:absolute;
+    left:9%; right:9%; bottom:8%;
+    height:0%;
+    background:var(--paper);
+    border-radius:5px 5px 0 0;
+    box-shadow:0 -4px 10px rgba(0,0,0,0.35);
+    transition:height .65s ease .3s, transform .65s ease .3s;
+    z-index:2;
+  }
+  #envelope-wrap.open .letter-peek{
+    height:60%;
+    transform:translateY(-34%);
+  }
+  .flap{
+    position:absolute;
+    top:0; left:0; width:100%; height:62%;
+    background:linear-gradient(160deg, #3d1226, var(--black));
+    clip-path:polygon(0 0, 100% 0, 50% 82%);
+    transform-origin:top center;
+    transition:transform .65s cubic-bezier(.6,-0.28,.35,1.4);
+    z-index:3;
+    box-shadow:0 6px 14px rgba(0,0,0,0.55);
+    border-bottom:1px solid rgba(255,120,170,0.2);
+  }
+  .seal{
+    position:absolute;
+    left:50%; top:38%;
+    transform:translate(-50%,-50%);
+    width:34px; height:34px;
+    border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--pink-neon), var(--pink-deep) 70%);
+    box-shadow:0 0 12px rgba(255,47,126,0.55), inset 0 0 4px rgba(0,0,0,0.4);
+    display:flex; align-items:center; justify-content:center;
+    font-size:15px;
+  }
+  #envelope-wrap.open .flap{ transform:rotateX(180deg); }
+
+  .hint{
+    text-align:center;
+    color:var(--pink-soft);
+    font-size:0.85rem;
+    margin-top:18px;
+    opacity:0.75;
+    animation:pulse 1.8s ease-in-out infinite;
+    letter-spacing:0.5px;
+  }
+  @keyframes pulse{0%,100%{opacity:.4;}50%{opacity:.9;}}
+
+  /* ---------- LETTER (emerges & grows from envelope) ---------- */
+  #letter-card{
+    position:absolute;
+    left:50%; top:42%;
+    width:min(340px, 90vw);
+    transform:translate(-50%,-16%) scale(0.28);
+    opacity:0;
+    z-index:4;
+    pointer-events:none;
+    transition: transform 1s cubic-bezier(.22,1,.36,1), opacity .45s ease;
+  }
+  #scene.opened #envelope-wrap{ opacity:0; transition:opacity .5s ease .15s; pointer-events:none; }
+  #scene.opened #letter-card{
+    transform:translate(-50%,-58%) scale(1);
+    opacity:1;
+    pointer-events:auto;
+  }
+
+  .paper{
+    background:var(--paper);
+    border-radius:10px;
+    padding:26px 22px 22px;
+    box-shadow:0 25px 60px -18px rgba(0,0,0,0.65), 0 0 0 1px rgba(163,19,79,0.15);
+    position:relative;
+    max-height:62vh;
+    overflow-y:auto;
+  }
+  .ornament-top, .ornament-bottom{
+    text-align:center;
+    color:#1a1a1a;
+    font-size:1.1rem;
+    letter-spacing:10px;
+    margin-bottom:12px;
+  }
+  .ornament-bottom{ margin-top:16px; margin-bottom:0; }
+  .letter-body{
+    color:var(--ink);
+    font-size:1.08rem;
+    line-height:1.55;
+    white-space:pre-wrap;
+    text-align:left;
+  }
+  .signoff{
+    font-family:'Dancing Script', cursive;
+    text-align:right;
+    color:var(--pink-deep);
+    font-size:1.4rem;
+    margin-top:14px;
+  }
+  .again-btn{
+    display:block;
+    margin:20px auto 0;
+    background:var(--black);
+    color:var(--pink-soft);
+    border:1px solid var(--pink-deep);
+    padding:10px 22px;
+    border-radius:999px;
+    font-size:0.85rem;
+    letter-spacing:0.5px;
+    cursor:pointer;
+    font-family:'EB Garamond', serif;
+  }
+
+  /* ---------- EDITOR ---------- */
+  #editor-toggle{
+    position:fixed;
+    bottom:16px; right:16px;
+    width:44px; height:44px;
+    border-radius:50%;
+    background:rgba(20,10,16,0.85);
+    border:1px solid var(--pink-deep);
+    color:var(--pink-soft);
+    font-size:1.15rem;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 4px 14px rgba(0,0,0,0.5);
+    z-index:6;
+    cursor:pointer;
+  }
+  #editor{
+    display:none;
+    position:fixed; inset:0;
+    background:rgba(10,4,8,0.75);
+    z-index:10;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  #editor.show{display:flex;}
+  .editor-card{
+    background:var(--paper);
+    border-radius:14px;
+    padding:22px;
+    width:min(420px,100%);
+    max-height:88vh;
+    overflow-y:auto;
+    box-shadow:0 20px 50px rgba(0,0,0,0.4);
+  }
+  .editor-card h2{
+    margin:0 0 14px;
+    color:var(--ink);
+    font-size:1.1rem;
+    font-family:'Cinzel Decorative', serif;
+    font-weight:400;
+  }
+  .editor-card label{
+    display:block;
+    font-size:0.82rem;
+    color:#8a2a55;
+    margin-bottom:6px;
+  }
+  .editor-card textarea{
+    width:100%;
+    min-height:160px;
+    border:1px solid var(--pink-soft);
+    border-radius:10px;
+    padding:10px;
+    font-size:1rem;
+    resize:vertical;
+    font-family:'EB Garamond', serif;
+  }
+  .editor-card input[type=text]{
+    width:100%;
+    border:1px solid var(--pink-soft);
+    border-radius:10px;
+    padding:10px;
+    font-size:1rem;
+    margin-top:4px;
+    font-family:'EB Garamond', serif;
+  }
+  .editor-row{margin-bottom:14px;}
+  .editor-actions{ display:flex; gap:10px; margin-top:10px; }
+  .editor-actions button{
+    flex:1; padding:11px; border-radius:10px; border:none;
+    font-size:0.95rem; cursor:pointer; font-family:'EB Garamond', serif;
+  }
+  #generate-btn{ background:var(--pink-deep); color:#fff; }
+  #close-editor{ background:#eee; color:#444; }
+  #link-result{
+    margin-top:14px; display:none;
+    background:#ffe4f0; border-radius:10px; padding:12px;
+    font-size:0.82rem; word-break:break-all; color:var(--ink);
+  }
+  #copy-btn{
+    margin-top:8px; width:100%;
+    background:var(--gold); color:#3a2600;
+    border:none; padding:9px; border-radius:8px;
+    font-size:0.9rem; cursor:pointer;
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <h1 class="title" id="title-text">Du hast Post 🖤</h1>
+
+  <div id="scene">
+    <div id="envelope-wrap">
+      <div class="envelope">
+        <div class="envelope-body"></div>
+        <div class="letter-peek"></div>
+        <div class="flap"><div class="seal">🖤</div></div>
+      </div>
+    </div>
+
+    <div id="letter-card">
+      <div class="paper">
+        <div class="ornament-top">🖤 ❦ 💗 ❦ 🖤</div>
+        <div class="letter-body" id="letter-body">Hey Schatz,
+ich wollte dir einfach nochmal sagen, wie dankbar ich für dich bin. Auch wenn wir gestern einen schwierigen Moment hatten, bin ich umso glücklicher, dass wir immer einen Weg zueinander finden. Danke, dass du so viel für mich machst und mich unterstützt, das bedeutet mir wirklich unglaublich viel. Du bist ein so wichtiger Teil meines Lebens, und ich liebe dich mehr, als ich oft in Worte fassen kann. ❤️</div>
+        <div class="signoff" id="signoff-text">für immer deins</div>
+        <div class="ornament-bottom">🖤 ❦ 💗 ❦ 🖤</div>
+      </div>
+      <button class="again-btn" id="again-btn">Nochmal öffnen</button>
+    </div>
+  </div>
+
+  <div class="hint" id="hint-text">antippen zum Öffnen</div>
+</div>
+
+<button id="editor-toggle" title="Nachricht bearbeiten">✏️</button>
+
+<div id="editor">
+  <div class="editor-card">
+    <h2>Deinen Brief gestalten</h2>
+    <div class="editor-row">
+      <label for="msg-input">Brieftext (mehrere Zeilen möglich)</label>
+      <textarea id="msg-input">Hey Schatz,
+ich wollte dir einfach nochmal sagen, wie dankbar ich für dich bin. Auch wenn wir gestern einen schwierigen Moment hatten, bin ich umso glücklicher, dass wir immer einen Weg zueinander finden. Danke, dass du so viel für mich machst und mich unterstützt, das bedeutet mir wirklich unglaublich viel. Du bist ein so wichtiger Teil meines Lebens, und ich liebe dich mehr, als ich oft in Worte fassen kann. ❤️</textarea>
+    </div>
+    <div class="editor-row">
+      <label for="sign-input">Unterschrift</label>
+      <input type="text" id="sign-input" maxlength="60" value="für immer deins">
+    </div>
+    <div class="editor-row">
+      <label for="titel-input">Titel über dem Umschlag</label>
+      <input type="text" id="titel-input" maxlength="40" value="Du hast Post 🖤">
+    </div>
+    <div class="editor-actions">
+      <button id="generate-btn">Link erstellen</button>
+      <button id="close-editor">Schließen</button>
+    </div>
+    <div id="link-result">
+      <div id="link-text"></div>
+      <button id="copy-btn">Link kopieren</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // floating hearts background (mix of black and pink)
+  const hearts = ["🖤","💗","🖤","💕","🖤"];
+  for(let i=0;i<10;i++){
+    const h = document.createElement('div');
+    h.className = 'bg-heart';
+    h.textContent = hearts[Math.floor(Math.random()*hearts.length)];
+    h.style.left = Math.random()*100+'vw';
+    h.style.animationDuration = (9+Math.random()*10)+'s';
+    h.style.animationDelay = (Math.random()*10)+'s';
+    document.body.appendChild(h);
+  }
+
+  function b64EncodeUnicode(str){
+    return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+      (m,p)=>String.fromCharCode('0x'+p)));
+  }
+  function b64DecodeUnicode(str){
+    return decodeURIComponent(Array.prototype.map.call(atob(str),
+      c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+  }
+
+  function readFromHash(){
+    const hash = window.location.hash.replace(/^#/, '');
+    if(!hash) return null;
+    const params = new URLSearchParams(hash);
+    const m = params.get('m');
+    const s = params.get('s');
+    const t = params.get('t');
+    if(!m) return null;
+    try{
+      return {
+        message: b64DecodeUnicode(m),
+        signoff: s ? b64DecodeUnicode(s) : 'für immer deins',
+        title: t ? b64DecodeUnicode(t) : 'Du hast Post 🖤'
+      };
+    }catch(e){ return null; }
+  }
+
+  const shared = readFromHash();
+  const defaultMsg = document.getElementById('msg-input').value;
+  const defaultSign = document.getElementById('sign-input').value;
+  const defaultTitle = document.getElementById('titel-input').value;
+
+  let currentMessage = shared ? shared.message : defaultMsg;
+  let currentSignoff = shared ? shared.signoff : defaultSign;
+  let currentTitle = shared ? shared.title : defaultTitle;
+
+  document.getElementById('title-text').textContent = currentTitle;
+  document.getElementById('letter-body').textContent = currentMessage;
+  document.getElementById('signoff-text').textContent = currentSignoff;
+
+  if(shared){
+    document.getElementById('editor-toggle').style.display = 'none';
+  }
+
+  // ---- envelope open interaction ----
+  const scene = document.getElementById('scene');
+  const wrap = document.getElementById('envelope-wrap');
+  const hint = document.getElementById('hint-text');
+
+  wrap.addEventListener('click', ()=>{
+    wrap.classList.add('open');
+    hint.style.display='none';
+    setTimeout(()=>{
+      scene.classList.add('opened');
+    }, 950);
+  });
+
+  document.getElementById('again-btn').addEventListener('click', ()=>{
+    scene.classList.remove('opened');
+    wrap.classList.remove('open');
+    hint.style.display='block';
+  });
+
+  // ---- editor ----
+  const editor = document.getElementById('editor');
+  document.getElementById('editor-toggle').addEventListener('click', ()=>{
+    editor.classList.add('show');
+  });
+  document.getElementById('close-editor').addEventListener('click', ()=>{
+    editor.classList.remove('show');
+  });
+
+  document.getElementById('generate-btn').addEventListener('click', ()=>{
+    const msg = document.getElementById('msg-input').value.trim() || defaultMsg;
+    const sign = document.getElementById('sign-input').value.trim() || defaultSign;
+    const titel = document.getElementById('titel-input').value.trim() || defaultTitle;
+
+    document.getElementById('title-text').textContent = titel;
+    document.getElementById('letter-body').textContent = msg;
+    document.getElementById('signoff-text').textContent = sign;
+
+    const params = new URLSearchParams();
+    params.set('m', b64EncodeUnicode(msg));
+    params.set('s', b64EncodeUnicode(sign));
+    params.set('t', b64EncodeUnicode(titel));
+
+    const base = window.location.origin + window.location.pathname;
+    const link = base + '#' + params.toString();
+
+    const resultBox = document.getElementById('link-result');
+    const linkText = document.getElementById('link-text');
+    linkText.textContent = link;
+    resultBox.style.display = 'block';
+
+    document.getElementById('copy-btn').onclick = ()=>{
+      navigator.clipboard.writeText(link).then(()=>{
+        const btn = document.getElementById('copy-btn');
+        const old = btn.textContent;
+        btn.textContent = 'Kopiert! ✓';
+        setTimeout(()=>btn.textContent = old, 1500);
+      });
+    };
+  });
+})();
+</script>
+
+</body>
+</html>
